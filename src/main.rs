@@ -21,7 +21,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{}: {:?}", itf.name, itf);
         for v in itf.addr.iter() {
             if !v.ip().is_loopback() {
-                let socket = UdpSocket::bind(format!("{}:{}", v.ip(), MULTICAST_PORT)).await.expect("Could not bind socket");
+                let res = UdpSocket::bind(format!("{}:{}", v.ip(), MULTICAST_PORT)).await;
+                let socket = match res {
+                    Ok(s) => s,
+                    Err(e) => {
+                        eprintln!("Error binding socket: {:?}", e);
+                        continue;
+                    }
+                };
                 println!("Listening on {}", socket.local_addr()?);
                 socket.set_broadcast(true)?;
                 if v.ip().is_ipv4() {
